@@ -9,12 +9,19 @@ Faceswap是一种利用深度学习手段来交换图片和视频中的面孔的
 
 # 目录
 1 目标
+
 2 人脸识别科普
+
 3 实现流程图
+
 4 后续改进
+
 5 用到的工具
+
 6 应用前景
+
 7 代码使用举例
+
 8 参看文档
 
 # 1 目标
@@ -22,18 +29,23 @@ Faceswap是一种利用深度学习手段来交换图片和视频中的面孔的
 实现视频中的人物被换脸
 ## 1.2 子目标
 人脸检测 Detection
+
 人脸校准 Alignment
+
 人脸Decoder/Encoder （将一张脸训练成另一张脸）
+
 视频与图像的互相转换
 
 # 2 人脸识别科普
 人脸识别任务主要分为4大板块：
+
 - Detection - 识别出人脸位置
 - Alignment -人脸上的特征点定位
 - Verification -人脸校验
 - Identification(Recognization) -人脸识别
 
 后两者的区别在于，人脸校验是要给你两张脸问你是不是同一个人，人脸识别是给你一张脸和一个库问你这张脸是库里的谁。 
+
 此次faceswap只用到前两个板块Detection和Alignment：
 - Detection - 用于找到视频中被换脸人的脸的位置
 - Alignment - 用于解决B脸和A脸的表情同步，判断正脸侧脸等问题
@@ -65,11 +77,11 @@ FFmpeg介绍
 
 ### 3.2.1 人脸检测 - 两种方案
 
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/2.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/2.jpg)
 
 - 1) 基于传统HOG模型
 
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/3.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/3.jpg)
 
 上述为调用dlib库中的HOG模型做人脸检测，dlib官方文档有如下描述，表明该模型经过大量训练在人脸检测领域确实比较成熟：
 This face detector is made using the classic Histogram of Oriented Gradients (HOG) feature combined with a linear classifier, an image pyramid, and sliding window detection scheme. 
@@ -77,7 +89,7 @@ The pose estimator was created by using dlib's implementation of the paper: One 
 顺便值得一提的是，HOG模型多用于行人检测，行人检测很多基于经典论文HOG+SVM模型。
 - 2) 基于CNN模型
 
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/4.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/4.jpg)
 
 从上述代码可以看出，我们是将first step 得到的连续帧序列图片作为输入。
 通过对输入的处理得到每一帧人脸位置的信息输出到json文件中，并且截取人脸位置的照片。
@@ -99,7 +111,7 @@ The pose estimator was created by using dlib's implementation of the paper: One 
 基于深度学习的方法。
 原理不做展开，直接调用dlib实现。
 
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/5.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/5.jpg)
 
 我们可以找到68个人脸特征点。
 
@@ -116,7 +128,7 @@ PA（ 普氏分析）包含了常见的矩阵变换和SVD的分解过程，最�
 1 这个矩阵不是将a脸转换为b脸，那是third setp要完成的任务。
 2 这个矩阵是让a脸具有和b脸拥有相同的表情，朝向。
 
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/6.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/6.jpg)
 
 实质上最后transformation_from_points就是得到了一个转换矩阵，第一幅图片中的人脸可以通过这个转换矩阵映射到第二幅图片中，与第二幅图片中的人脸对应。
 - 2) 点云匹配 PCL
@@ -130,7 +142,7 @@ umeyama实现来自开源scikit-image/skimage/transform/_geometric.py
 假设让你盯着一个人的视频连续看上 100 个小时，接着又给你看一眼另外一个人的照片，接着让你凭着记忆画出来刚才的照片，你一定画的会很像第一个人的。**使用的模型是 Autoencoder。核心思想：GAN**
 1 这个模型所做的是基于**原始**的图片再次生成**原始**的图片。
 2 Autoencoder 的编码器（Encoder）把图片进行压缩，而解码器（Decoder）把图片进行还原，一个示例如下图：
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/7.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/7.jpg)
 ### 我们的目标不是让他原始图片到原始图片，而是让原始图片转为目标图片？
 1 有趣的是，在之前的基础上，即使我们输入的是另外一个人脸，也会被 Autoencoder 编码成为一个类似原来的脸。
 2 为了提升我们最终的效果，我们还需要把人脸共性相关的属性和人脸特性相关的属性进行学习。
@@ -138,7 +150,7 @@ umeyama实现来自开源scikit-image/skimage/transform/_geometric.py
 然后，我们对每个脸有一个单独的解码器Decoder，这个解码器是为了学习人脸个性的地方。
 这样当你用 A 的脸通过编码器，再使用 B 的解码器的话，你会得到一个与 A 的表情一致，但是 B 的脸。
 ### 上述过程用流程图表示如下：（训练过程）
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/8.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/8.jpg)
 ### 上述过程用公式表示如下:
 X‘ = Decoder(Encoder(X))	     #目标函数
 Loss = L1Loss(X‘-X)	            	#损失函数
@@ -147,7 +159,7 @@ Loss_A = L1Loss(A'-A)
 B' = Decoder_B (Encoder(B))
 Loss_B = L1Loss(B'-B)
 ### 上述过程用代码表示如下:
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/9.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/9.jpg)
 Encoder 就是4层卷积+2层全连接层+1层upscale。
 Decorder 就是三层upscale+1层卷积。
 Upscale 嵌套在Encoder和Decoder中。
@@ -157,15 +169,15 @@ Upscale的核心是PixelShuffler() ，该函数是把图像进行了一定的扭
 ### 结论和痛点
 1 因为在训练中使用的是原图 A 的扭曲来还原 A，应用中是用 B 来还原 A，所以**扭曲的方式(PixelShuffler)**会极大的影响到最终的结果。因此，如何选择更好的扭曲方式，也是一个重要的问题。
 2 当我们图片融合的时候，会有一个难题，如何又保证效果又防止图片抖动。于是我们还要引入相关的算法处理这些情况。于是我们知道，一个看似直接的人脸转换算法在实际操作中需要考虑各种各样的特殊情况，这才可以以假乱真。
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/a.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/a.jpg)
 ## 3.4 Fourth Step – 人脸转换
 我们的目标是：将带有landmark（ A脸）的帧图片转换成新的图片（只换landmark区域，A脸变B脸）
 ### 3.4.1 先生成每一帧图片中A脸区域对应的B脸区域图片
 过程：Decoder_B (Encoder(A))   #输入A ，输出B
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/b.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/b.jpg)
 ### 3.4.2 将生成的B脸图片替换A脸区域
 根据之前3.2.1人脸检测生成的json文件找到A脸的landmark，逐帧替换，生成一系列新图。
-![image](https://github.com/luckyluckydadada/Faceswap/blob/master/1.png)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/c.jpg)
 ## 3.5 Fifth Step – 图片转视频
 将经过Step4转换后的图片通过FFmpeg组合成视频，将原视频的音频也可以加进去。
 ##4 后续改进
