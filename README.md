@@ -2,7 +2,9 @@
 Faceswap是一种利用深度学习手段来交换图片和视频中的面孔的工具。
 本文可以帮助对此目标感兴趣的深度学习爱好者了解强化学习模型GAN（生成对抗网络），同时还涉及人脸检测和特征点提取等相关内容。
 首先本文对如何利用GAN进行faceswap的原理进行说明，其次对训练过程给出了说明，最后对模型存在的问题进行了分析，希望以后有时间可以进行改进。
+
 我的项目地址：https://github.com/luckyluckydadada/faceswap（原理清晰，注释完整）
+
 代码参考：https://github.com/deepfakes/faceswap（原作者）
 
 # 目录
@@ -38,7 +40,7 @@ Faceswap是一种利用深度学习手段来交换图片和视频中的面孔的
 
 #3 实现流程图
 
-![image](https://github.com/luckyluckydadada/Faceswap/tree/master/readme/1.jpg)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/1.jpg)
 
 - 五个步骤：视频转图片、人脸检测和校准、Encoder/Decoder训练、人脸转换、图片转视频
 - 两个模型：人脸定位模型+人脸转换模型（训练+转换）
