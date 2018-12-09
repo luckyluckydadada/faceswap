@@ -120,6 +120,7 @@ The pose estimator was created by using dlib's implementation of the paper: One 
 
 
 - 普氏分析
+
 因为图片中的人脸可能会有一定的倾斜，而且不同图片中人脸的神态表情朝向也不一样。
 
 所以，我们需要把人脸进行调整。 
@@ -135,6 +136,7 @@ PA（ 普氏分析）包含了常见的矩阵变换和SVD的分解过程，最�
 实质上最后transformation_from_points就是得到了一个转换矩阵，第一幅图片中的人脸可以通过这个转换矩阵映射到第二幅图片中，与第二幅图片中的人脸对应。
 
 - 点云匹配 PCL
+
 Umeyama是一种PCL算法，简单点来理解就是将源点云(source cloud)变换到目标点云(target cloud)相同的坐标系下，包含了常见的矩阵变换和SVD的分解过程。最终返回变换矩阵。计算过程与普氏分析极其相似。
 
 调用umeyama后获取变换所需的矩阵，最后将原图和所求得矩阵放进warpAffine即可获的新图片。
@@ -242,18 +244,25 @@ Upscale的核心是PixelShuffler() ，该函数是把图像进行了一定的扭
 穿衣购物可以更加真人模拟。
 
 ##7 代码使用举例
+
 - 1 将吴彦祖和王宝强视频转为帧序列图片
+
 ffmpeg -i video/wyz/yanzu.mp4 photo/wyz/video-frame-%d.png
 ffmpeg -i video/wbq/wbq.mp4 photo/wbq/video-frame-%d.png
 - 2 将人脸特写图片剪出来保存，并输出landmark 到json文件中
+
 python faceswap.py extract -i photo/wyz -o photo/faces/wyz
 python faceswap.py extract -i photo/wbq -o photo/faces/wbq
 - 3 将两人人脸特写照片进行训练
+
 python faceswap.py train -A photo/faces/wyz -B photo/faces/wbq -m models/wyz_wbq
 - 4 将吴彦祖的帧序列原图转为王宝强的帧序列图片
+
 python faceswap.py convert -i photo/wyz -o photo/wyz_wbq -m models/wyz_wbq 
 - 5 将转换后的图片帧组合成视频，如何加入音频请自行google用法
+
 ffmpeg -i photo/wyz_wbq/video-frame-%0d.png -c:v libx264 -vf "fps=24,format=yuv420p" video/wyz_wbq/out.mp4
 
 ## 8 参考
+
 - https://github.com/deepfakes/faceswap
