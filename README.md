@@ -50,7 +50,7 @@ Faceswap是一种利用深度学习手段来交换图片和视频中的面孔的
 - Detection - 用于找到视频中被换脸人的脸的位置
 - Alignment - 用于解决B脸和A脸的表情同步，判断正脸侧脸等问题
 
-#3 实现流程图
+# 3 实现流程图
 
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/1.jpg)
 
