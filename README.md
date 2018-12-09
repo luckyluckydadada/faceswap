@@ -182,7 +182,10 @@ B' = Decoder_B (Encoder(B))
 Loss_B = L1Loss(B'-B)
 
 ### 上述过程用代码表示如下:
+
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/9.jpg)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/a.jpg)
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/b.jpg)
 
 Encoder 就是4层卷积+2层全连接层+1层upscale。
 Decorder 就是三层upscale+1层卷积。
@@ -198,18 +201,21 @@ Upscale的核心是PixelShuffler() ，该函数是把图像进行了一定的扭
 1 因为在训练中使用的是原图 A 的扭曲来还原 A，应用中是用 B 来还原 A，所以**扭曲的方式(PixelShuffler)** 会极大的影响到最终的结果。因此，如何选择更好的扭曲方式，也是一个重要的问题。
 
 2 当我们图片融合的时候，会有一个难题，如何又保证效果又防止图片抖动。于是我们还要引入相关的算法处理这些情况。于是我们知道，一个看似直接的人脸转换算法在实际操作中需要考虑各种各样的特殊情况，这才可以以假乱真。
-![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/a.jpg)
+
 
 ## 3.4 Fourth Step – 人脸转换
+
 我们的目标是：将带有landmark（ A脸）的帧图片转换成新的图片（只换landmark区域，A脸变B脸）
 
-### 3.4.1 先生成每一帧图片中A脸区域对应的B脸区域图片
+### 3.4.1 首先，生成每一帧图片中A脸区域对应的B脸区域图片
+
 过程：Decoder_B (Encoder(A))   #输入A ，输出B
-![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/b.jpg)
+
+![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/c.jpg)
 
 ### 3.4.2 将生成的B脸图片替换A脸区域
 根据之前3.2.1人脸检测生成的json文件找到A脸的landmark，逐帧替换，生成一系列新图。
-![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/c.jpg)
+
 
 ## 3.5 Fifth Step – 图片转视频
 将经过Step4转换后的图片通过FFmpeg组合成视频，将原视频的音频也可以加进去。
