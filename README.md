@@ -120,7 +120,8 @@ The pose estimator was created by using dlib's implementation of the paper: One 
 - 普氏分析 Procrustes Analysis 
 - 点云匹配 PCL 
 两种方案代码极其相似
-- 1) 普氏分析
+
+1) 普氏分析
 因为图片中的人脸可能会有一定的倾斜，而且不同图片中人脸的神态表情朝向也不一样。
 所以，我们需要把人脸进行调整。 
 PA（ 普氏分析）包含了常见的矩阵变换和SVD的分解过程，最终返回变换矩阵，调用变换矩阵，最后将原图和所求得矩阵放进warpAffine即可获的新图片。其中cv.warpAffine的功能就是根据变换矩阵对源矩阵进行变换。  
@@ -131,7 +132,8 @@ PA（ 普氏分析）包含了常见的矩阵变换和SVD的分解过程，最�
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/6.jpg)
 
 实质上最后transformation_from_points就是得到了一个转换矩阵，第一幅图片中的人脸可以通过这个转换矩阵映射到第二幅图片中，与第二幅图片中的人脸对应。
-- 2) 点云匹配 PCL
+
+2) 点云匹配 PCL
 Umeyama是一种PCL算法，简单点来理解就是将源点云(source cloud)变换到目标点云(target cloud)相同的坐标系下，包含了常见的矩阵变换和SVD的分解过程。最终返回变换矩阵。计算过程与普氏分析极其相似。
 调用umeyama后获取变换所需的矩阵，最后将原图和所求得矩阵放进warpAffine即可获的新图片。
 注意：
