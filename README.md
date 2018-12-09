@@ -121,11 +121,14 @@ The pose estimator was created by using dlib's implementation of the paper: One 
 - 点云匹配 PCL 
 两种方案代码极其相似
 
-1) 普氏分析
+- 普氏分析
 因为图片中的人脸可能会有一定的倾斜，而且不同图片中人脸的神态表情朝向也不一样。
+
 所以，我们需要把人脸进行调整。 
+
 PA（ 普氏分析）包含了常见的矩阵变换和SVD的分解过程，最终返回变换矩阵，调用变换矩阵，最后将原图和所求得矩阵放进warpAffine即可获的新图片。其中cv.warpAffine的功能就是根据变换矩阵对源矩阵进行变换。  
-注意：
+
+**注意：**
 1 这个矩阵不是将a脸转换为b脸，那是third setp要完成的任务。
 2 这个矩阵是让a脸具有和b脸拥有相同的表情，朝向。
 
@@ -133,55 +136,84 @@ PA（ 普氏分析）包含了常见的矩阵变换和SVD的分解过程，最�
 
 实质上最后transformation_from_points就是得到了一个转换矩阵，第一幅图片中的人脸可以通过这个转换矩阵映射到第二幅图片中，与第二幅图片中的人脸对应。
 
-2) 点云匹配 PCL
+- 点云匹配 PCL
 Umeyama是一种PCL算法，简单点来理解就是将源点云(source cloud)变换到目标点云(target cloud)相同的坐标系下，包含了常见的矩阵变换和SVD的分解过程。最终返回变换矩阵。计算过程与普氏分析极其相似。
+
 调用umeyama后获取变换所需的矩阵，最后将原图和所求得矩阵放进warpAffine即可获的新图片。
-注意：
+
+**注意：**
 代码详见 lib/umeyama.py ，不做解释。
+
 umeyama实现来自开源scikit-image/skimage/transform/_geometric.py
+
 ## 3.3 Third Step – 人脸Encoder/Decoder训练
 ### 接下来转换人脸，人脸转换的基本原理是什么? 
+
 假设让你盯着一个人的视频连续看上 100 个小时，接着又给你看一眼另外一个人的照片，接着让你凭着记忆画出来刚才的照片，你一定画的会很像第一个人的。**使用的模型是 Autoencoder。核心思想：GAN**
+
 1 这个模型所做的是基于**原始**的图片再次生成**原始**的图片。
+
 2 Autoencoder 的编码器（Encoder）把图片进行压缩，而解码器（Decoder）把图片进行还原，一个示例如下图：
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/7.jpg)
+
 ### 我们的目标不是让他原始图片到原始图片，而是让原始图片转为目标图片？
+
 1 有趣的是，在之前的基础上，即使我们输入的是另外一个人脸，也会被 Autoencoder 编码成为一个类似原来的脸。
+
 2 为了提升我们最终的效果，我们还需要把人脸共性相关的属性和人脸特性相关的属性进行学习。
 因此，我们对所有的脸都用一个统一的编码器Encoder，这个编码器的目的是学习人脸共性的地方；
 然后，我们对每个脸有一个单独的解码器Decoder，这个解码器是为了学习人脸个性的地方。
 这样当你用 A 的脸通过编码器，再使用 B 的解码器的话，你会得到一个与 A 的表情一致，但是 B 的脸。
+
 ### 上述过程用流程图表示如下：（训练过程）
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/8.jpg)
+
 ### 上述过程用公式表示如下:
-X‘ = Decoder(Encoder(X))	     #目标函数
+X‘ = Decoder(Encoder(X))	        #目标函数
+
 Loss = L1Loss(X‘-X)	            	#损失函数
+
 A' = Decoder_A(Encoder(A))
+
 Loss_A = L1Loss(A'-A)
+
 B' = Decoder_B (Encoder(B))
+
 Loss_B = L1Loss(B'-B)
+
 ### 上述过程用代码表示如下:
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/9.jpg)
+
 Encoder 就是4层卷积+2层全连接层+1层upscale。
 Decorder 就是三层upscale+1层卷积。
 Upscale 嵌套在Encoder和Decoder中。
 Upscale的核心是PixelShuffler() ，该函数是把图像进行了一定的扭曲，而这个扭曲增加了学习的难度，反而让模型能够实现最终的效果。
+
 ### PixelShuffler对训练起作用的解读：
+
 如果你一直在做简单的题目，那么必然不会有什么解决难题的能力。但是，我只要把题目做一些变体，就足以让你成功。因为在建模中使用的是原图 A 的扭曲来还原 A，应用中是用 B 来还原 A，所以扭曲的方式会极大的影响到最终的结果。因此，如何选择更好的扭曲方式，也是一个重要的问题。
+
 ### 结论和痛点
-1 因为在训练中使用的是原图 A 的扭曲来还原 A，应用中是用 B 来还原 A，所以**扭曲的方式(PixelShuffler)**会极大的影响到最终的结果。因此，如何选择更好的扭曲方式，也是一个重要的问题。
+
+1 因为在训练中使用的是原图 A 的扭曲来还原 A，应用中是用 B 来还原 A，所以**扭曲的方式(PixelShuffler)** 会极大的影响到最终的结果。因此，如何选择更好的扭曲方式，也是一个重要的问题。
+
 2 当我们图片融合的时候，会有一个难题，如何又保证效果又防止图片抖动。于是我们还要引入相关的算法处理这些情况。于是我们知道，一个看似直接的人脸转换算法在实际操作中需要考虑各种各样的特殊情况，这才可以以假乱真。
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/a.jpg)
+
 ## 3.4 Fourth Step – 人脸转换
 我们的目标是：将带有landmark（ A脸）的帧图片转换成新的图片（只换landmark区域，A脸变B脸）
+
 ### 3.4.1 先生成每一帧图片中A脸区域对应的B脸区域图片
 过程：Decoder_B (Encoder(A))   #输入A ，输出B
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/b.jpg)
+
 ### 3.4.2 将生成的B脸图片替换A脸区域
 根据之前3.2.1人脸检测生成的json文件找到A脸的landmark，逐帧替换，生成一系列新图。
 ![image](https://github.com/luckyluckydadada/faceswap/blob/master/readme/c.jpg)
+
 ## 3.5 Fifth Step – 图片转视频
 将经过Step4转换后的图片通过FFmpeg组合成视频，将原视频的音频也可以加进去。
+
 ##4 后续改进
 |问题描述|目前策略|如何改进
 |-
@@ -192,6 +224,7 @@ Upscale的核心是PixelShuffler() ，该函数是把图像进行了一定的扭
 |特征点提取|dlib64个特征点|无
 |表情同步|umeyama + cv2.warpAffine|无
 |边界明显|A图加上自身和B图的每一个像素的均值的差值|泊松融合ongoing
+
 ##5 用到的工具
 - Dlib：基于 C++的机器学习人脸检测算法库
 - OpenCV:计算机视觉图像处理算法库
@@ -203,8 +236,11 @@ Upscale的核心是PixelShuffler() ，该函数是把图像进行了一定的扭
 
 ##6 应用前景
 - faceswap到底有哪些真正的社会价值呢? 
+
 我们可以用任何人来拍摄一个电影，然后变成我们想要的任何人。
+
 我们可以创建更加真实的虚拟人物（AR、VR技术）。
+
 穿衣购物可以更加真人模拟。
 
 ##7 代码使用举例
