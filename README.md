@@ -117,9 +117,7 @@ The pose estimator was created by using dlib's implementation of the paper: One 
 
 ### 3.2.2.2 校准
 对提取到的特征点，通过以下两种方案对特征点进行处理来做到校准人脸（表情同步）
-- 普氏分析 Procrustes Analysis 
-- 点云匹配 PCL 
-两种方案代码极其相似
+
 
 - 普氏分析
 因为图片中的人脸可能会有一定的倾斜，而且不同图片中人脸的神态表情朝向也不一样。
